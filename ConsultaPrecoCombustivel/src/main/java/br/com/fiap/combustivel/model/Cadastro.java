@@ -1,10 +1,19 @@
 package br.com.fiap.combustivel.model;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
+@Entity
+@Table
 public class Cadastro {
 	
+	@Id
+	@GeneratedValue
+	private Long id;
 	private String combustivel;
 	private Double valor;
 	private String nomePosto;
@@ -41,7 +50,10 @@ public class Cadastro {
 	public void setLongitude(long longitude) {
 		this.longitude = longitude;
 	}
-	
-	
-
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
 }

@@ -1,9 +1,9 @@
 package br.com.fiap.combustivel.endpoint;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -12,33 +12,27 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import br.com.fiap.combustivel.dao.CadastroDAO;
 import br.com.fiap.combustivel.model.Cadastro;
 
 @Path("/combustivelServicesWS")
 public class CombustivelServices {
 
-	public static List<Cadastro> cadastros;
-	
-	static {
-		cadastros = new ArrayList<Cadastro>();
-		Cadastro cadastro = new Cadastro();
-		cadastro.setCombustivel("ETANOL");
-		cadastro.setLatitude(123456);
-		cadastro.setLongitude(-1234566);
-		cadastro.setNomePosto("Shell Carrefour raposo tavares");
-		cadastro.setValor(2.89);
-		cadastros.add(cadastro);
-	}
+	private CadastroDAO cadastroDAO = new CadastroDAO();
 	
 	@GET
-	@Path("/{nomePosto}/{combustivel}")
+	@Path("/{id}")
     @Produces({MediaType.APPLICATION_JSON})
-	public Response consultar(@PathParam("nomePosto")String nomePosto, @PathParam("combustivel")String combustivel) {
-		for (Cadastro cadastro : cadastros) {
-			if(nomePosto.equals(cadastro.getNomePosto()) && combustivel.equals(cadastro.getCombustivel()))
-			return Response.status(200).entity(cadastro).build();
+	public Response consultar(@PathParam("id")Long id) {
+		try {
+			Cadastro cadastro = cadastroDAO.findById(id);
+			if(cadastro != null) {
+				return Response.status(200).entity(cadastro).build();
+			}
+		} catch (Exception e) {
+			return Response.status(200).entity("Erro ao consultar! talvez o id esteja incorreto.").build();
 		}
-		return Response.status(200).entity("Não localizado").build();
+		return Response.status(200).entity("Nenhum registro localizado!").build();
 	}
 	
 	@POST
@@ -46,13 +40,11 @@ public class CombustivelServices {
 	@Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
 	public Response cadastrar(Cadastro cadastro) {
-		for (Cadastro cadastroLoop : cadastros) {
-			if(cadastro.getNomePosto().equals(cadastroLoop.getNomePosto()) && cadastroLoop.getCombustivel().equals(cadastro.getCombustivel())) {
-				cadastros.set(cadastros.indexOf(cadastroLoop), cadastro);
-				return Response.status(200).entity(cadastroLoop).build();
-			}
+		try {
+			cadastroDAO.salvar(cadastro);
+		} catch (Exception e) {
+			return Response.status(200).entity("Entidade Não cadastrada! Remova o campo Id ou tente novamente!").build();
 		}
-		cadastros.add(cadastro);
 		return Response.status(200).entity(cadastro).build();
 	}
 	
@@ -60,6 +52,20 @@ public class CombustivelServices {
 	@Path("consultar")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Cadastro> consultarCadastros() {
-		return cadastros;
+		return cadastroDAO.listar();
 	}
+	
+	@DELETE
+	@Path("/deletar/{id}")
+	@Produces(MediaType.TEXT_HTML)
+	public String deletar(@PathParam("id")Long id) {
+		try {
+			cadastroDAO.deletar(id);
+		} catch (Exception e) {
+			return "Erro ao deletar o registro!";
+		}
+		return "Registro deletado com sucessso!";
+		
+	}
+	
 }
